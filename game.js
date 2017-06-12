@@ -9,7 +9,9 @@ class Vector {
   plus(vector) {
         if ((vector instanceof Vector)) {
             return new Vector(this.x + vector.x, this.y  + vector.y);
-        } else {throw new Error("Можно прибавлять к вектору только вектор типа Vector");}
+        } else {
+            throw new Error("Можно прибавлять к вектору только вектор типа Vector");
+        }
   }
 
   times(n) {
@@ -25,22 +27,22 @@ console.log(`Текущее расположение: ${finish.x}:${finish.y}`);
 
 
 class Actor {
-    constructor(pos , size , speed) {
-        if (pos === undefined) pos = new Vector(0, 0);
-        if (size === undefined) size = new Vector(1, 1);
-        if (speed === undefined) speed = new Vector(0, 0);
-        if (pos instanceof Vector) {
-            this.pos = pos || new Vector(0, 0)
+    constructor(pos = new Vector(0, 0), size = new Vector(1, 1), speed = new Vector(0, 0)) {
+        //if (pos === undefined) pos = new Vector(0, 0);
+        //if (size === undefined) size = new Vector(1, 1);
+       // if (speed === undefined) speed = new Vector(0, 0);
+       if (pos instanceof Vector) {
+            this.pos = pos;
         } else {
             throw new Error('не Vector');
         }
         if (size instanceof Vector) {
-            this.size = size || new Vector(1, 1)
+            this.size = size;
         } else {
             throw new Error('не Vector');
         }
         if (speed instanceof Vector) {
-            this.speed = speed || new Vector(0, 0)
+            this.speed = speed;
         } else {
             throw new Error('не Vector');
         }
@@ -73,10 +75,10 @@ class Actor {
                 if (this == actor) {
                     return false;
                 }
-                if ((this.left == actor.left) && (this.top == actor.top) && (this.right == actor.right)
-                    && (this.bottom == actor.bottom)) {
-                    return true
-                }
+                //if ((this.left == actor.left) && (this.top == actor.top) && (this.right == actor.right)
+                //    && (this.bottom == actor.bottom)) {
+                //    return true
+                //}
                 if ((this.left < actor.right) && (this.right > actor.left) && (this.top < actor.bottom)
                     && (this.bottom > actor.top)) {
                     return true
@@ -87,7 +89,21 @@ class Actor {
             }
     }
 }
+class Player extends Actor {
+    constructor(pos = new Vector(0, 0)) {
+        super()
+        //pos.x = pos.x ;
+        //pos.y = pos.y - 0.5;
+        this.pos.x = pos.x;
+        this.pos.y = pos.y - 0.5;
+        this.size = new Vector(0.8, 1.5);
+        this.speed = new Vector(0, 0);
+    }
 
+    get type() {
+        return 'player';
+    }
+}
 const items = new Map();
 const player = new Actor();
 items.set('Игрок', player);
@@ -122,23 +138,37 @@ class Level {
     constructor(grid , actors) {
         this.grid = grid;
         this.actors = actors;
-        this.player = {
-            type : 'player'
+        if (this.actors != undefined) {
+
+        for (let a of actors) {
+            if (a instanceof Player) {
+                this.player = a;
+            }
         }
+        }
+        //this.player = new Player();
+
+
         if ((grid === undefined)||(grid.length === 0) || (grid == [])) {
             this.height = 0 ;
             this.width = 0 ;
         } else {
-            this.height = grid.length;
-            let arrr = grid.slice();
-            if (arrr == undefined) {
-                this.width = 1
+            if (grid[0] == undefined) {
+                this.width = 1;
+                this.height = grid.length
             } else {
-                arrr.sort(function (a, b) {
-                    return (b.length - a.length)
-                });
-                let maxEl = arrr[0].length;
-                this.width = maxEl;
+                this.height = grid.length;
+                let arrr = grid.slice();
+                if (arrr == undefined) {
+                    this.width = 1
+                } else {
+                    arrr.sort(function (a, b) {
+                        return (b.length - a.length)
+                    });
+                    //let maxEl = arrr[0].length;
+                    //console.log(arrr[0]+' xxxxxxxxxxxxxxxxxxxxxxxxxxx '+arrr[0].length)
+                    this.width = arrr[0].length;
+                }
             }
         }
         this.status = null;
@@ -156,23 +186,35 @@ class Level {
 
     actorAt(actor){
             if (actor instanceof Actor)  {
+
+                //console.log(this.actors)
+
                 if(this.actors == undefined) {
                     return undefined;
                 }
+
                 if (this.actors.length == 1)  {
                     return undefined;
                 }
+                let acts = []
                 for(let act of this.actors) {
-
-                   if (((act.left < actor.right) && (act.right > actor.left) && (act.top < actor.bottom)
-                        && (act.bottom > actor.top)) || ((act.left == actor.right) && (act.right == actor.left) && (act.top == actor.bottom)
-                       && (act.bottom == actor.top))) {
-                        return act
-                    } else {
-                        return undefined
+                    if (act instanceof Actor) {
+                        acts.push(act)
                     }
                 }
+                if (acts != undefined) {
+                    for (let i = 0; i < acts.length; i++) {
+                        //console.log(acts[i])
 
+                        if ((acts[i].left < actor.right) && (acts[i].right > actor.left) && (acts[i].top < actor.bottom)
+                            && (acts[i].bottom > actor.top)) {
+                            return acts[i];
+                        }
+
+                    }
+                } else {
+                    return undefined
+                }
             } else {
                 throw new Error('аргумент не Actor');
             }
@@ -180,6 +222,8 @@ class Level {
 
     obstacleAt(position, size) {
         let act = new Actor(position, size);
+
+
             if ((position instanceof Vector) && (size instanceof Vector)) {
                 if (act.pos.y + act.size.y > this.height)  {
                     console.log('выход за границы')
@@ -191,8 +235,8 @@ class Level {
                     return 'wall'
                 }
                 for(let i = act.left; i< act.right; i++) {
-                    for(let j = act.top; i< act.bottom; i++) {
-                        console.log(this.grid[i][j])
+                    for(let j = act.top; j< act.bottom; j++) {
+
                         if (this.grid[i][j] != undefined) {
                             return this.grid[i][j]
                         }  else {
@@ -249,7 +293,6 @@ class Level {
     }
 }
 
-
 /*const ppp = new Actor(new Vector(1,1));
 const gridd = [
     [undefined, undefined , undefined],
@@ -270,11 +313,11 @@ const grid = [
 
 const goldCoin = { type: 'coin', title: 'Золото' };
 const bronzeCoin = { type: 'coin', title: 'Бронза' };
-const player1 = new Actor();
+const playerLev = new Actor();
 const fireball = new Actor();
 
-const level = new Level(undefined, [ goldCoin, bronzeCoin, player1, fireball ]);
-//console.log('test ' + level.height)
+const level = new Level(undefined, [ goldCoin, bronzeCoin, playerLev, fireball ]);
+
 level.playerTouched('coin', goldCoin);
 level.playerTouched('coin', bronzeCoin);
 
@@ -283,19 +326,15 @@ if (level.noMoreActors('coin')) {
     console.log(`Статус игры: ${level.status}`);
 }
 
-const obstacle = level.obstacleAt(new Vector(1, 1), player1.size);
+const obstacle = level.obstacleAt(new Vector(1, 1), playerLev.size);
 if (obstacle) {
-    console.log(level.grid)
     console.log(`На пути препятствие: ${obstacle}`);
 }
 
-const otherActor = level.actorAt(player1);
-//?
+const otherActor = level.actorAt(playerLev);
 if (otherActor === fireball) {
     console.log('Пользователь столкнулся с шаровой молнией');
 }
-
-
 
 class LevelParser {
     constructor(object) {
@@ -386,7 +425,9 @@ const actorsDict = Object.create(null);
 actorsDict['@'] = Actor;
 
 const parser = new LevelParser(actorsDict);
+
 const level3 = parser.parse(plan2);
+console.log(level3)
 
 level3.grid.forEach((line, y) => {
     line.forEach((cell, x) => console.log(`(${x}:${y}) ${cell}`));
@@ -491,14 +532,12 @@ console.log(fr.pos)
 console.log(fr.pos)
 
 class Coin extends Actor {
-    constructor(pos) {
+    constructor(pos = new Vector(0, 0)) {
 
         super();
-        pos.x = pos.x +0.2;
-        pos.y = pos.y + 0.1;
         this.size = new Vector(0.6, 0.6);
-        this.pos.x = pos.x;
-        this.pos.y = pos.y;
+        this.pos.x = pos.x+0.2;
+        this.pos.y = pos.y+ 0.1;
         this.springSpeed = 8;
         this.springDist = 0.07;
         this.spring = Math.random(0, 2 * Math.PI);
@@ -521,6 +560,7 @@ class Coin extends Actor {
         let newSpringVec = this.getSpringVector();
         console.log(newSpringVec)
         this.pos =  new Vector(this.pos.x, this.pos.y + newSpringVec.y)
+        return this.pos
     }
 
     act(time) {
@@ -529,24 +569,44 @@ class Coin extends Actor {
     }
 }
 
-class Player extends Actor {
-    constructor(pos) {
-        super()
-        pos.x = pos.x ;
-        pos.y = pos.y - 0.5;
-        this.pos.x = pos.x;
-        this.pos.y = pos.y;
-        this.size = new Vector(0.8, 1.5);
-        this.speed = new Vector(0, 0);
-    }
 
-    get type() {
-        return 'player';
-    }
+/*/
+let wawa = new Array(2).fill(new Array(2).fill('wall'));
+console.log(wawa)
+const lele = new Level(wawa);
+const popo = new Vector(0.5, 0.5);
+console.log(lele)
+const w = lele.obstacleAt(popo, new Vector(1,1));
+console.log('cпать')
+console.log(w)
+*/
+
+
+console.log('ПРОВЕРКА ТЕСТА С PLAYEROМ')
+let player2 = new Player()
+let lll = new Level(undefined, [ player2]);
+console.log( lll.player instanceof Player)
+
+const schemaa = [
+    '         ',
+    '         ',
+    '         ',
+    '         ',
+    '     !xxx',
+    ' @       ',
+    'xxx!     ',
+    '         '
+];
+const actorDictt = {
+    '@': Player
 }
+const parserr = new LevelParser(actorDictt);
+const levell = parserr.parse(schemaa);
+console.log(levell)
+runLevel(levell, DOMDisplay);
 
-
-
+//const p = new Player();
+//console.log(p)
 
 
 
