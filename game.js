@@ -139,12 +139,13 @@ class Level {
         this.grid = grid;
         this.actors = actors;
         if (this.actors != undefined) {
-
+/*
         for (let a of actors) {
             if (a instanceof Player) {
                 this.player = a;
             }
         }
+ */
         }
         //this.player = new Player();
 
@@ -174,7 +175,13 @@ class Level {
         this.status = null;
         this.finishDelay = 1;
     }
-
+    get player() {
+        for (let a of this.actors) {
+            if (a instanceof Actor) {
+               return a;
+            }
+        }
+    }
     isFinished() {
         if ((this.status != null) && (this.finishDelay < 0)) {
             return true;
@@ -185,6 +192,7 @@ class Level {
     }
 
     actorAt(actor){
+
             if (actor instanceof Actor)  {
 
                 //console.log(this.actors)
@@ -194,6 +202,7 @@ class Level {
                 }
 
                 if (this.actors.length == 1)  {
+
                     return undefined;
                 }
                 let acts = []
@@ -202,17 +211,25 @@ class Level {
                         acts.push(act)
                     }
                 }
+
                 if (acts != undefined) {
+
                     for (let i = 0; i < acts.length; i++) {
                         //console.log(acts[i])
+                        if (acts[i] == actor) {
+                        console.log('the same')
+                            return undefined;
+                        }
 
                         if ((acts[i].left < actor.right) && (acts[i].right > actor.left) && (acts[i].top < actor.bottom)
-                            && (acts[i].bottom > actor.top)) {
+                            && (acts[i].bottom > actor.top)&& (acts[i] instanceof Actor)) {
+
                             return acts[i];
                         }
 
                     }
                 } else {
+
                     return undefined
                 }
             } else {
@@ -221,19 +238,27 @@ class Level {
     }
 
     obstacleAt(position, size) {
+        position.x = Math.ceil(position.x)
+        position.y = Math.ceil(position.y)
         let act = new Actor(position, size);
 
 
+
             if ((position instanceof Vector) && (size instanceof Vector)) {
-                if (act.pos.y + act.size.y > this.height)  {
-                    console.log('выход за границы')
-                    return 'lava'
-                }
+
                 if ( (act.pos.x + act.size.x  > this.width) || (act.pos.x + act.size.x < 0) || (act.pos.y + act.size.y < 0)
-                 || (act.pos.x > this.width) || (act.pos.y  > this.height) || (act.pos.x < 0) || (act.pos.y < 0 ) ) {
-                    console.log('выход за границы 2')
+                 || (act.pos.x > this.width) || (act.pos.y  > this.height) || (act.pos.x < 0) || (act.pos.y < 0 )
+                    || (act.pos.x + act.size.x  > this.height)
+                 ) {
+                    //console.log('выход за границы 2')
                     return 'wall'
                 }
+                if (act.pos.y + act.size.y > this.height)  {
+                    //console.log('выход за границы')
+                    return 'lava'
+                }
+                //this.level.actorAt(act)
+
                 for(let i = act.left; i< act.right; i++) {
                     for(let j = act.top; j< act.bottom; j++) {
 
@@ -244,6 +269,7 @@ class Level {
                         }
                     }
                 }
+
                 return undefined
             } else {
                 throw 'один из аргументов не Vector';
@@ -275,37 +301,31 @@ class Level {
 
     playerTouched(obstacle, coin) {
         if (this.status != null) {
-
+            //return;
         } else {
             if ((obstacle == 'lava') || (obstacle == 'fireball')) {
                 this.status = 'lost'
                 return;
             }
             if ((obstacle == 'coin') && (coin.type == 'coin')) {
-                this.actors.indexOf(coin);
-                this.actors.splice(coin,1);
-                if (!this.noMoreActors('coin')) {
-                    this.status = 'won';
-                }
+                let index = this.actors.indexOf(coin);
+                this.actors.splice(index,1);
             }
+            if ((this.noMoreActors(obstacle)) && (obstacle == 'coin')) {
+
+                this.status = 'won';
+               // return
+            }
+
         }
 
     }
 }
 
-/*const ppp = new Actor(new Vector(1,1));
-const gridd = [
-    [undefined, undefined , undefined],
-    ['wall', ppp,'wall'],
-    [undefined, undefined , undefined]
-]
-const levell = new Level(undefined, [ppp]);
-const playerr = new Actor(new Vector(1, 1), new Vector(2, 2));
-console.log(playerr)
-console.log(levell.actorAt(playerr))
-console.log(levell)
-*/
 
+
+
+console.log('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz')
 const grid = [
     [undefined, undefined],
     ['wall', 'wall']
@@ -313,10 +333,12 @@ const grid = [
 
 const goldCoin = { type: 'coin', title: 'Золото' };
 const bronzeCoin = { type: 'coin', title: 'Бронза' };
+
 const playerLev = new Actor();
 const fireball = new Actor();
 
-const level = new Level(undefined, [ goldCoin, bronzeCoin, playerLev, fireball ]);
+const level = new Level(grid, [ bronzeCoin, goldCoin, playerLev, fireball]);
+
 
 level.playerTouched('coin', goldCoin);
 level.playerTouched('coin', bronzeCoin);
@@ -326,7 +348,7 @@ if (level.noMoreActors('coin')) {
     console.log(`Статус игры: ${level.status}`);
 }
 
-const obstacle = level.obstacleAt(new Vector(1, 1), playerLev.size);
+const obstacle = level.obstacleAt(new Vector(0.5, 0.5), playerLev.size);
 if (obstacle) {
     console.log(`На пути препятствие: ${obstacle}`);
 }
@@ -335,6 +357,7 @@ const otherActor = level.actorAt(playerLev);
 if (otherActor === fireball) {
     console.log('Пользователь столкнулся с шаровой молнией');
 }
+console.log('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz')
 
 class LevelParser {
     constructor(object) {
@@ -346,23 +369,32 @@ class LevelParser {
         }
         if (symb in this.object) {
 
-            return new this.object[symb]();
+            return  this.object[symb];
+
         } else {
             return undefined;
         }
     }
     obstacleFromSymbol(symb) {
+        let ooo = this.object
+
         if (symb == 'x'){
             return 'wall';
         } else if (symb == '!'){
             return 'lava';
         } else if (symb == undefined){
             return undefined;
-        } else if (symb in this.object){
-                return (new this.object[symb]).type ;
-        } else {
-            return undefined;
         }
+        for(let s in ooo) {
+            if (s == symb) {
+                return (new this.object[symb]).type ;
+            }
+        }
+        //if (symb in ooo){
+        //        return (new this.object[symb]).type ;
+        //} else {
+        //    return undefined;
+        //}
     }
     createGrid(plan) {
         let arr = []
@@ -412,23 +444,29 @@ class LevelParser {
     }
 
     parse(plan) {
-        return new Level(this.createGrid(plan),this.createActors(plan))
+        console.log(this)
+        let z = new Level(this.createGrid(plan),this.createActors(plan))
+        return z
     }
 }
 
 const plan2 = [
-    ' @ ',
-    'x!x'
+    '  x  ',
+    '!x x!',
+    '  x  '
 ];
 
 const actorsDict = Object.create(null);
 actorsDict['@'] = Actor;
 
+
 const parser = new LevelParser(actorsDict);
 
+console.log(parser.obstacleFromSymbol('2'))
+console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 const level3 = parser.parse(plan2);
 console.log(level3)
-
+console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 level3.grid.forEach((line, y) => {
     line.forEach((cell, x) => console.log(`(${x}:${y}) ${cell}`));
 });
@@ -496,6 +534,8 @@ class HorizontalFireball extends Fireball{
     }
 }
 
+
+
 class VerticalFireball extends Fireball {
     constructor(pos) {
         super(pos);
@@ -559,8 +599,8 @@ class Coin extends Actor {
         this.updateSpring(time);
         let newSpringVec = this.getSpringVector();
         console.log(newSpringVec)
-        this.pos =  new Vector(this.pos.x, this.pos.y + newSpringVec.y)
-        return this.pos
+        this.pos.y = this.pos.y + newSpringVec.y
+        return new Vector(this.pos.x ,  this.pos.y + newSpringVec.y)
     }
 
     act(time) {
@@ -568,6 +608,28 @@ class Coin extends Actor {
         this.getNextPosition(time)
     }
 }
+/*
+const ppp = new Actor(new Vector(0,1),new Vector(1, 1));
+const gridd = [
+    [undefined, undefined , undefined],
+    ['wall', ppp,'wall'],
+    [undefined, undefined , undefined]
+]
+
+const c = new Coin(new Vector(4, 4));
+const playerr2 = new Actor(new Vector(0, 0), new Vector(1, 1));
+const levell = new Level(undefined, [c,c,c]);
+console.log('ПРОВЕРКА ACTORAT')
+
+console.log(levell.actorAt(ppp));
+console.log(c.pos);
+console.log(c.size);
+console.log('------')
+console.log(ppp.pos);
+console.log(ppp.size);
+
+*/
+
 
 
 /*/
@@ -581,11 +643,14 @@ console.log('cпать')
 console.log(w)
 */
 
-
+/*
 console.log('ПРОВЕРКА ТЕСТА С PLAYEROМ')
-let player2 = new Player()
+let player2 = new Fireball()
+let player3= new Player(new Vector(2,2))
 let lll = new Level(undefined, [ player2]);
-console.log( lll.player instanceof Player)
+console.log( lll.player.type)
+*/
+
 
 const schemaa = [
     '         ',
@@ -601,12 +666,19 @@ const actorDictt = {
     '@': Player
 }
 const parserr = new LevelParser(actorDictt);
-const levell = parserr.parse(schemaa);
-console.log(levell)
-runLevel(levell, DOMDisplay);
+const levelll = parserr.parse(schemaa);
+console.log(levelll)
+runLevel(levelll, DOMDisplay);
 
 //const p = new Player();
 //console.log(p)
 
-
+/*
+console.log('---------------------------------------------')
+let c = new Coin(new Vector(5, 5))
+//console.log(c.pos)
+//c.act(5)
+let n = c.getNextPosition(5)
+//console.log(n)
+console.log(c.pos)*/
 
