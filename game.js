@@ -144,9 +144,9 @@ class Level {
         this.status = null;
         this.finishDelay = 1;
     }
-    get player() {
+   get player() {
         for (let a of this.actors) {
-            if (a instanceof Actor) {
+            if (a.type == 'player') {
                 return a;
             }
         }
