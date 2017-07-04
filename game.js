@@ -206,14 +206,17 @@ class Level {
     }
 
     noMoreActors(type) {
+        let arrTypes = [];
         if (this.actors == undefined) {
             return true;
         }
         for(let act of this.actors) {
-            if (act.type == type) {
-                return false;
-            }
+            arrTypes.push(act.type)
+        }
+        if (arrTypes.indexOf(type)) {
             return true;
+        } else {
+            return false;
         }
     }
 
