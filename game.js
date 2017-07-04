@@ -115,7 +115,6 @@ items.forEach(status);
 movePlayer(5, -5);
 items.forEach(status);
 
-
 class Level {
     constructor(grid , actors) {
         this.grid = grid;
@@ -130,27 +129,24 @@ class Level {
             } else {
                 this.height = grid.length;
                 let arrr = grid.slice();
-               // if (arrr == undefined) {
-                //    this.width = 1
-              //  } else
-               //     {
-                    arrr.sort(function (a, b) {
-                        return (b.length - a.length)
-                    });
-                    this.width = arrr[0].length;
-             //   }
+                arrr.sort(function (a, b) {
+                    return (b.length - a.length)
+                });
+                this.width = arrr[0].length;
             }
         }
         this.status = null;
         this.finishDelay = 1;
     }
-   get player() {
+
+    get player() {
         for (let a of this.actors) {
             if (a.type == 'player') {
                 return a;
             }
         }
     }
+
     isFinished() {
         if ((this.status != null) && (this.finishDelay < 0)) {
             return true;
@@ -159,34 +155,16 @@ class Level {
         }
     }
 
-    actorAt(actor){
-        if (actor instanceof Actor)  {
-            if(this.actors == undefined) {
-                return undefined;
-            }
-            if (this.actors.length == 1)  {
-                return undefined;
-            }
-            let acts = []
-            for(let act of this.actors) {
-                if (act instanceof Actor) {
-                    acts.push(act)
-                }
-            }
-            if (acts != undefined) {
-                for (let i = 0; i < acts.length; i++) {
-                    if (acts[i] == actor) {
-                        return undefined;
-                    } else if (acts[i].isIntersect(actor)) {
-                        return acts[i];
-                        }
-                }
-            } else {
-                return undefined;
-            }
-        } else {
-            throw new Error('аргумент не Actor');
+    actorAt(act){
+        if(this.actors == undefined) {
+            return undefined;
         }
+        for (let i = 0; i < this.actors.length; i++) {
+            if (this.actors[i].isIntersect(act)) {
+                return this.actors[i]
+            }
+        }
+
     }
 
     obstacleAt(position, size) {
@@ -247,13 +225,15 @@ class Level {
                 return;
             }
             if ((obstacle == 'coin') && (coin.type == 'coin')) {
+                let arrOfTypes = [];
                 let index = this.actors.indexOf(coin);
                 this.actors.splice(index,1);
-            }
-            if ((this.noMoreActors(obstacle)) && (obstacle == 'coin')) {
-                this.status = 'won';
 
+                if (this.noMoreActors(obstacle)) {
+                    this.status = 'won'
+                }
             }
+
         }
     }
 }
@@ -272,7 +252,6 @@ const fireball = new Actor();
 
 const level = new Level(grid, [ bronzeCoin, goldCoin, playerLev, fireball]);
 
-
 level.playerTouched('coin', goldCoin);
 level.playerTouched('coin', bronzeCoin);
 
@@ -287,6 +266,7 @@ if (obstacle) {
 }
 
 const otherActor = level.actorAt(playerLev);
+
 if (otherActor === fireball) {
     console.log('Пользователь столкнулся с шаровой молнией');
 }
@@ -298,7 +278,7 @@ class LevelParser {
     }
     actorFromSymbol(symb) {
         if (symb == undefined) {
-            return undefinedж
+            return undefined;
         }
         if (symb in this.object) {
 
@@ -332,13 +312,14 @@ class LevelParser {
                     m.splice(i,1,'wall');
                 } else if (m[i] === '!') {
                     m.splice(i,1,'lava');
-                } else if (m[i] === 'o') {
-                    m.splice(i,1,undefined);
-                } else if (m[i] === ' ') {
+                }
+                else if (m[i] === ' ') {
                     m.splice(i,1,undefined);
                 } else if (m[i] === undefined) {
                     m.splice(i,1,undefined);
                 } else if((this.object != undefined) && ( new this.object[m[i]] instanceof Actor)) {
+                    m.splice(i,1,undefined);
+                } else {
                     m.splice(i,1,undefined);
                 }
             }
@@ -371,35 +352,34 @@ class LevelParser {
     }
 
     parse(plan) {
-        console.log(this)
-        let z = new Level(this.createGrid(plan),this.createActors(plan))
-        return z
+        return new Level(this.createGrid(plan),this.createActors(plan))
     }
 }
 
 const plan2 = [
-    '  x  ',
-    '!x x!',
-    '  x  '
+    ' @x@ ',
+    '!x@x!',
+    ' @x@ '
 ];
 
 const actorsDict = Object.create(null);
 actorsDict['@'] = Actor;
 
-
-const parser = new LevelParser(actorsDict);
+const parser = new LevelParser();
 
 console.log(parser.obstacleFromSymbol('2'))
 console.log('проверка parse')
-const level3 = parser.parse(plan2);
-console.log(level3)
 
+const level3 = parser.parse(plan2);
+//console.log(level3.createGrid(plan2))
+//console.log(level3.createActors(plan2))
+console.log(level3)
+console.log('проверка parse')
 level3.grid.forEach((line, y) => {
     line.forEach((cell, x) => console.log(`(${x}:${y}) ${cell}`));
 });
 
 level3.actors.forEach(actor => console.log(`(${actor.pos.x}:${actor.pos.y}) ${actor.type}`));
-
 
 class Fireball extends Actor {
     constructor(pos,speed) {
@@ -422,9 +402,7 @@ class Fireball extends Actor {
     }
 
     act(time, level) {
-        //console.log(this.getNextPosition(time));
         let nextPos = this.getNextPosition(time);
-
         let obstacle = level.obstacleAt(nextPos, this.size)
         if (obstacle) {
             console.log(obstacle)
@@ -433,11 +411,8 @@ class Fireball extends Actor {
             console.log('не врезался')
             this.pos = this.getNextPosition(time);
         }
-
     }
 }
-
-console.log()
 
 const time = 5;
 const speed = new Vector(1, 0);
@@ -459,8 +434,6 @@ class HorizontalFireball extends Fireball{
     }
 }
 
-
-
 class VerticalFireball extends Fireball {
     constructor(pos) {
         super(pos);
@@ -481,7 +454,6 @@ class FireRain extends Fireball {
         this.pos = this.firstPos;
     }
 }
-
 
 const le = new Level([
     [undefined, undefined,undefined , 'wall', undefined],
@@ -529,23 +501,22 @@ class Coin extends Actor {
     }
 
     act(time) {
-        //console.log(pos)
         this.getNextPosition(time)
     }
 }
 
- const ppp = new Actor(new Vector(0,0),new Vector(2, 2));
+ const ppp = new Actor(new Vector(1,0),new Vector(2, 2));
  const gridd = [
  [undefined, undefined , undefined],
  ['wall', ppp,'wall'],
  [undefined, undefined , undefined]
  ]
  const c = new Coin(new Vector(4, 4));
- const playerr2 = new Actor(new Vector(0, 0), new Vector(1, 1));
+ const playerr2 = new Actor(new Vector(0, 1), new Vector(2, 2));
  const levell = new Level(undefined, [c,playerr2,c]);
- console.log('ПРОВЕРКА ACTORAT')
+
  console.log(levell.actorAt(ppp));
-console.log('ПРОВЕРКА ACTORAT')
+
  /*
  console.log(c.pos);
  console.log(c.size);
@@ -605,3 +576,5 @@ runLevel(levelll, DOMDisplay);
  let n = c.getNextPosition(5)
  //console.log(n)
  console.log(c.pos)*/
+
+
