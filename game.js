@@ -59,7 +59,7 @@ class Actor {
 
     isIntersect(actor) {
         if (actor instanceof Actor) {
-            if (this == actor) {
+            if (this.pos === actor.pos) {
                 return false;
             }
             if ((this.left < actor.right) && (this.right > actor.left) && (this.top < actor.bottom) && (this.bottom > actor.top)) {
@@ -119,20 +119,20 @@ class Level {
     constructor(grid , actors) {
         this.grid = grid;
         this.actors = actors;
-        if ((grid === undefined)||(grid.length === 0) || (grid == [])) {
+        if ((grid === undefined)||(grid.length === 0)) {
             this.height = 0 ;
             this.width = 0 ;
         } else {
-            if (grid[0] == undefined) {
+            if (grid[0] === undefined) {
                 this.width = 1;
                 this.height = grid.length
             } else {
                 this.height = grid.length;
-                let arrr = grid.slice();
-                arrr.sort(function (a, b) {
+                let arrHelp = grid.slice();
+                arrHelp.sort(function (a, b) {
                     return (b.length - a.length)
                 });
-                this.width = arrr[0].length;
+                this.width = arrHelp[0].length;
             }
         }
         this.status = null;
@@ -140,15 +140,15 @@ class Level {
     }
 
     get player() {
-        for (let a of this.actors) {
-            if (a.type == 'player') {
-                return a;
+        for (let actor of this.actors) {
+            if (actor.type == 'player') {
+                return actor;
             }
         }
     }
 
     isFinished() {
-        if ((this.status != null) && (this.finishDelay < 0)) {
+        if ((this.status !== null) && (this.finishDelay < 0)) {
             return true;
         } else {
             return false;
@@ -197,12 +197,8 @@ class Level {
     }
 
     removeActor(actor) {
-        for(let act of this.actors) {
-            if ((actor.top == act.top)&&(actor.bottom == act.bottom)&&(actor.left == act.left)&&(actor.right == act.right)) {
-                let index = this.actors.indexOf(act);
-                this.actors.splice(index,1);
-            }
-        }
+        let index = this.actors.indexOf(actor);
+        this.actors.splice(index,1);
     }
 
     noMoreActors(type) {
