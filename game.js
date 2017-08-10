@@ -18,7 +18,6 @@ class Vector {
     }
 }
 
-
 class Actor {
     constructor(pos = new Vector(0, 0), size = new Vector(1, 1), speed = new Vector(0, 0)) {
         if ((pos instanceof Vector) && (size instanceof Vector) && (speed instanceof Vector)) {
@@ -131,43 +130,41 @@ class Level {
                 return this.actors[i]
             }
         }
-
     }
 
     obstacleAt(position, size) {
         if ((position instanceof Vector) && (size instanceof Vector)) {
-
-            let act = new Actor(position, size);
             let lev = new Level(this.grid)
+            let left = Math.floor(position.x);
+            let right = Math.ceil(position.x + size.x);
+            let top = Math.floor(position.y);
+            let bottom = Math.ceil(position.y + size.y);
 
-            if (act.left < 0) {
+            if (left < 0) {
                 return 'wall';
             }
-            if (act.right >= lev.width) {
+            if (right > lev.width) {
                 return 'wall';
             }
-            if (act.top < 0) {
+            if (top < 0) {
                 return 'wall';
             }
-            if ((act.bottom) > lev.height) {
+            if (bottom > lev.height) {
                 return 'lava';
             }
-            for (let i = (act.left); i <=(act.right); i++) {
-                for (let j = (act.top); j < (act.bottom); j++) {
-                    if (this.grid != undefined) {
-                        return this.grid[Math.ceil(j)][Math.ceil(i)];
-                    } else {
-                        return undefined;
+
+            for (let i = left; i < right; i++) {
+                for (let j = top; j < bottom; j++) {
+                    if (lev.grid[j][i]) {
+                        return lev.grid[j][i]
                     }
                 }
             }
-            
-            } else {
-                throw 'один из аргументов не Vector';
-            }
-
-
+        } else {
+            throw 'один из аргументов не Vector';
+        }
     }
+
     removeActor(actor) {
         let index = this.actors.indexOf(actor);
         this.actors.splice(index,1);
@@ -204,12 +201,9 @@ class Level {
                     this.status = 'won'
                 }
             }
-
         }
     }
 }
-
-
 
 class LevelParser {
     constructor(object) {
@@ -227,42 +221,42 @@ class LevelParser {
             return undefined;
         }
     }
-    obstacleFromSymbol(symb) {
-        let ooo = this.object
-        if (symb == 'x'){
+    obstacleFromSymbol(symbol) {
+        let objects = this.object
+        if (symbol == 'x'){
             return 'wall';
-        } else if (symb == '!'){
+        } else if (symbol == '!'){
             return 'lava';
-        } else if (symb == undefined){
+        } else if (symbol == undefined){
             return undefined;
         }
-        for(let s in ooo) {
-            if (s == symb) {
-                return (new this.object[symb]).type ;
+        for(let sym in objects) {
+            if (sym == symbol) {
+                return (new this.object[symbol]).type ;
             }
         }
     }
     createGrid(plan) {
         let arr = []
-        for (var p of plan) {
-            let m = p.split('')
-            for (var i = 0; i< m.length; i++) {
-                if (m[i] === 'x') {
-                    m.splice(i,1,'wall');
-                } else if (m[i] === '!') {
-                    m.splice(i,1,'lava');
+        for (var col of plan) {
+            let elem = col.split('')
+            for (var i = 0; i< elem.length; i++) {
+                if (elem[i] === 'x') {
+                    elem.splice(i,1,'wall');
+                } else if (elem[i] === '!') {
+                    elem.splice(i,1,'lava');
                 }
-                else if (m[i] === ' ') {
-                    m.splice(i,1,undefined);
-                } else if (m[i] === undefined) {
-                    m.splice(i,1,undefined);
+                else if (elem[i] === ' ') {
+                    elem.splice(i,1,undefined);
+                } else if ( elem[i] === undefined) {
+                    elem.splice(i,1,undefined);
                 } else if((this.object !== undefined) ) {
-                    m.splice(i,1,undefined);
+                    elem.splice(i,1,undefined);
                 } else {
-                    m.splice(i,1,undefined);
+                    elem.splice(i,1,undefined);
                 }
             }
-            arr.push(m)
+            arr.push(elem)
         }
         return arr;
     }
@@ -276,9 +270,9 @@ class LevelParser {
         }
         let arr = [];
         let arrActors = [];
-        for (let p of plan) {
-            let m = p.split('');
-            arr.push(m);
+        for (let col of plan) {
+            let elem = col.split('');
+            arr.push(elem);
         }
         for (var j = 0; j < plan[0].length; j++) {
             for (var i = 0; i < arr.length; i++) {
@@ -323,7 +317,7 @@ class Fireball extends Actor {
             //console.log(obstacle)
             this.handleObstacle()
         } else {
-           // console.log('не врезался')
+            // console.log('не врезался')
             this.pos = this.getNextPosition(time);
         }
     }
@@ -364,8 +358,8 @@ class Coin extends Actor {
 
         super();
         this.size = new Vector(0.6, 0.6);
-        this.pos.x = pos.x+0.2;
-        this.pos.y = pos.y+ 0.1;
+        this.pos.x = pos.x + 0.2;
+        this.pos.y = pos.y + 0.1;
         this.springSpeed = 8;
         this.springDist = 0.07;
         this.spring = Math.random(0, 2 * Math.PI);
@@ -399,21 +393,11 @@ const schemas = [
     [
         '         ',
         '         ',
-        '    =    ',
-        '       o ',
+        '         ',
+        '        o',
         '     !xxx',
         ' @       ',
         'xxx!     ',
-        '         '
-    ],
-    [
-        '      v  ',
-        '    v    ',
-        '  v      ',
-        '        o',
-        '        x',
-        '@   x    ',
-        'x        ',
         '         '
     ]
 ];
